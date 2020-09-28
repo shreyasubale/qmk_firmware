@@ -101,6 +101,11 @@ static uint8_t peek_matrix_intersection(pin_t out_pin, pin_t in_pin) {
 #endif
 
 __attribute__((weak)) bool is_keyboard_left(void) {
+#if defined(HARDCODE_LEFT_SIDE)
+    return true;
+#elif defined(HARDCODE_RIGHT_SIDE)
+    return false;
+#else
 #if defined(SPLIT_HAND_PIN)
     // Test pin SPLIT_HAND_PIN for High/Low, if low it's right hand
     setPinInput(SPLIT_HAND_PIN);
@@ -118,17 +123,24 @@ __attribute__((weak)) bool is_keyboard_left(void) {
 #endif
 
     return is_keyboard_master();
+#endif
 }
 
 __attribute__((weak)) bool is_keyboard_master(void) {
-    static enum { UNKNOWN, MASTER, SLAVE } usbstate = UNKNOWN;
+    #if defined(HARDCODE_SLAVE_MODE)
+        return false;
+    #elif defined(HARDCODE_MASTER_MODE)
+        return true;
+    #else
+        static enum { UNKNOWN, MASTER, SLAVE } usbstate = UNKNOWN;
 
-    // only check once, as this is called often
-    if (usbstate == UNKNOWN) {
-        usbstate = usbIsActive() ? MASTER : SLAVE;
-    }
+        // only check once, as this is called often
+        if (usbstate == UNKNOWN) {
+            usbstate = usbIsActive() ? MASTER : SLAVE;
+        }
 
-    return (usbstate == MASTER);
+        return (usbstate == MASTER);
+   #endif
 }
 
 // this code runs before the keyboard is fully initialized
